@@ -20,29 +20,11 @@ mapbox_access_token = 'pk.eyJ1Ijoia2FuZ2JvbHUiLCJhIjoiY2p5ZTRhdHRvMHhqeDNpbzF5cm
 map_data = pd.read_csv("nyc-wi-fi-hotspot-locations.csv")
 
 # Selecting only required columns
-map_data = map_data.drop_duplicates()
+map_data = map_data[["BoroName", "Type", "Provider", "Name", "SSID", "Location", "Location_T", "Latitude", "Longitude"]].drop_duplicates()
 
 # count by block
 Borough_counts = map_data["BoroName"].value_counts(sort=True)
 Borough_counts_index = Borough_counts.index.tolist()
-
-# map data
-data_map = [
-    {
-        "type": "scattermapbox",
-        "lat": list(map_data['Latitude']),
-        "lon": list(map_data['Longitude']),
-        "hoverinfo": "text",
-        "hovertext": [["Name: {} <br>Type: {} <br>Provider: {}".format(i,j,k)]
-                        for i,j,k in zip(map_data['Name'], map_data['Type'],map_data['Provider'])],
-        "mode": "markers",
-        "name": list(map_data['Name']),
-        "marker": {
-            "size": 6,
-            "opacity": 0.7
-        }
-    }
-]
 
 # layout for map
 layout_map = dict(
@@ -68,22 +50,22 @@ layout_map = dict(
     )
 )
 
-# Function to generate scattermap
-def gen_map(map_data):
-    # groupby returns a dictionary mapping the values of the first field
-    # 'classification' onto a list of record dictionaries with that
-    # classification value.
-    return {
-        "data": data_map,
-        "layout": layout_map
-    }
+# # Function to generate scattermap
+# def gen_map(map_data):
+#     # groupby returns a dictionary mapping the values of the first field
+#     # 'classification' onto a list of record dictionaries with that
+#     # classification value.
+#     return {
+#         "data": data,
+#         "layout": layout_map
+#     }
 
 # app layout
 app.layout = html.Div(
     html.Div([
         html.Div(
             [
-                html.H1(children='NYC WIFI Data',
+                html.H2(children='NYC WIFI Data',
                         className='nine columns'),
                 html.Img(
                     src="https://www1.nyc.gov/assets/home/images/global/nyc.png",
@@ -93,15 +75,15 @@ app.layout = html.Div(
                         'width': '9%',
                         'float': 'right',
                         'position': 'relative',
-                        'padding-top': 8,
-                        'padding-right': 0
+                        'paddingTop': 12,
+                        'paddingRight': 0
                     },
                 ),
                 html.Div(children='''
                         Dash Visualization with map and various charts.
                         ''',
                         className='nine columns',
-                        style={'margin-left': 0}
+                        style={'marginLeft': 0}
                 )
             ], 
             className="row"
@@ -117,33 +99,26 @@ app.layout = html.Div(
                 #--------------------------
                 html.Div(
                     [
-                        html.P('Choose Region:'),
+                        html.H6('Choose Map Region:'),
                         dcc.Checklist(
                                 id = 'regionControl',
-                                options=[
-                                    {'label': 'Manhattan', 'value': 'MN'},
-                                    {'label': 'Bronx', 'value': 'BX'},
-                                    {'label': 'Queens', 'value': 'QU'},
-                                    {'label': 'Brooklyn', 'value': 'BK'},
-                                    {'label': 'Staten Island', 'value': 'SI'}
-                                ],
-                                value=['MN', 'BX', "QU",  'BK', 'SI'],
+                                options=[{'label': str(item), 'value': str(item)} for item in map_data['BoroName'].unique()],
+                                value= [item for item in map_data['BoroName'].unique()],
                                 labelStyle={'display': 'inline-block'}
                         ),
                     ],
                     className='six columns',
-                    style={'margin-top': '10'}
+                    style={'marginTop': '20'}
                 ),
                 #--------------------------
                 # 6 COLUMNS left, drop down
                 #--------------------------
                 html.Div(
                     [
-                        html.P('WIFI Type:'),
+                        html.H6('WIFI Type in Map:'),
                         dcc.Dropdown(
                             id='typeControl',
-                            options= [{'label': str(item),
-                                       'value': str(item)} for item in set(map_data['Type'])],
+                            options= [{'label': str(item), 'value': str(item)} for item in map_data['Type'].unique()],
                             multi=True,
                             value=list(set(map_data['Type']))
                         )
@@ -161,9 +136,7 @@ app.layout = html.Div(
                 html.Div(
                     [
                         dcc.Graph(id='map-graph',
-                                  animate=True,
-                                  style={'margin-top': '20'},
-                                  figure=gen_map(map_data))
+                                  animate=False)
                     ], className = "seven columns"
                 ),
 
@@ -196,16 +169,48 @@ app.layout = html.Div(
     className='ten columns offset-by-one')
 )
 
-# @app.callback(
-#     Output('map-graph', 'figure'),
-#     [Input('datatable', 'data'),
-#      Input('datatable', 'selected_rows')])
-# def map_selection(data, selected_rows):
-#     aux = pd.DataFrame(data)
-#     temp_df = aux.iloc[selected_rows, :]
-#     if len(selected_rows) == 0:
-#         return gen_map(aux)
-#     return gen_map(temp_df)
+"""
+Callback functions
+"""
+# change scatter map based on checklist and dropdown
+@app.callback(
+    Output('map-graph', 'figure'),
+    [Input('regionControl', 'value'),
+     Input('typeControl', 'value')])
+def map_selection(region, wifi_type):
+    print("selected region", region)
+    print("selected region", wifi_type)
+    selected = map_data[map_data["BoroName"].isin(region)] # BoroName filter
+    selected = selected[selected['Type'].isin(wifi_type)] # Type filter
+
+    # function to set wifi hotspot color on the map based on the type
+    def set_color(wifi_type):
+        if wifi_type == 'Free': return 'green'
+        elif wifi_type == 'Limited Free': return 'blue'
+        else: return 'orange'
+
+    # map data attribute
+    data_map = [{
+            "type": "scattermapbox",
+            "lat": selected['Latitude'],
+            "lon": selected['Longitude'],
+            "hoverinfo": "text",
+            "hovertext": [["Name: {} <br>Type: {} <br>Provider: {}".format(selected_name,selected_type,selected_provider)]
+                        for selected_name,selected_type,selected_provider in zip(selected['Name'], 
+                            selected['Type'], selected['Provider'])],
+            "mode": "markers",
+            "name": list(selected['Name']),
+            "marker": {
+                "size": 6,
+                "opacity": 0.7,
+                "color": list(map(set_color, selected['Type']))
+            }
+        }]
+    figure = {
+        "data": data_map,
+        "layout": layout_map
+    }
+    return figure
 
 # @app.callback(
 #     Output('datatable', 'data'),
