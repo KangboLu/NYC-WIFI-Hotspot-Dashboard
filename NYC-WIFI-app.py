@@ -16,7 +16,7 @@ app = dash.Dash(__name__,
 app.title = 'NYC Wi-Fi Hotspots'
 
 # API keys and datasets
-mapbox_access_token = 'pk.eyJ1Ijoia2FuZ2JvbHUiLCJhIjoiY2p5ZTRhdHRvMHhqeDNpbzF5cm9kbjFhNyJ9.vydoqmQGx0UhJ7l23K_s0A'
+mapbox_access_token = 'YOUR MAPBOX ACCESS TOKEN HERE'
 map_data = pd.read_csv("nyc-wi-fi-hotspot-locations.csv")
 
 # Selecting only required columns
@@ -211,57 +211,6 @@ def map_selection(region, wifi_type):
         "layout": layout_map
     }
     return figure
-
-# @app.callback(
-#     Output('datatable', 'data'),
-#     [Input('typeControl', 'value'),
-#      Input('regionControl', 'value')])
-# def update_selected_rows(typeControl, regionControl):
-#     map_aux = map_data.copy()
-
-#     # Type filter
-#     map_aux = map_aux[map_aux['Type'].isin(typeControl)]
-#     # regionControl filter
-#     map_aux = map_aux[map_aux["Borough"].isin(regionControl)]
-
-#     row = map_aux.to_dict('records')
-#     return row
-
-# @app.callback(
-#     Output('bar-graph', 'figure'),
-#     [Input('datatable', 'data'),
-#      Input('datatable', 'selected_rows')])
-# def update_figure(data, selected_rows):
-#     dff = pd.DataFrame(data)
-
-#     layout = go.Layout(
-#         bargap=0.05,
-#         bargroupgap=0,
-#         barmode='group',
-#         showlegend=False,
-#         dragmode="select",
-#         xaxis=dict(
-#             showgrid=False,
-#             nticks=50,
-#             fixedrange=False
-#         ),
-#         yaxis=dict(
-#             showticklabels=True,
-#             showgrid=False,
-#             fixedrange=False,
-#             rangemode='nonnegative',
-#             zeroline='hidden'
-#         )
-#     )
-
-#     data = Data([
-#          go.Bar(
-#              x=dff.groupby('Borough', as_index = False).count()['Borough'],
-#              y=dff.groupby('Borough', as_index = False).count()['Type']
-#          )
-#      ])
-
-#     return go.Figure(data=data, layout=layout)
 
 if __name__ == '__main__':
     app.run_server(debug=True)
