@@ -23,8 +23,8 @@ map_data = pd.read_csv("nyc-wi-fi-hotspot-locations.csv")
 map_data = map_data[["BoroName", "Type", "Provider", "Name", "SSID", "Location", "Location_T", "Latitude", "Longitude"]].drop_duplicates()
 
 # count by block
-Borough_counts = map_data["BoroName"].value_counts(sort=True)
-Borough_counts_index = Borough_counts.index.tolist()
+type_counts = map_data["Type"].value_counts(sort=True)
+type_counts_index = type_counts.index.tolist()
 
 # layout for map
 layout_map = dict(
@@ -123,8 +123,7 @@ app.layout = html.Div(
         # Map + table + Histogram
         html.Div([
                 # SCATTER MAP 
-                html.Div(
-                    [
+                html.Div([
                         dcc.Graph(id='map-graph',
                                   animate=False)
                     ], className = "seven columns"
@@ -136,9 +135,37 @@ app.layout = html.Div(
                     )
                 ], 
                 className= 'five columns'
-            )], 
+                )
+            ], 
             className="row"
-        )
+        ),
+
+        html.Div([
+            # html.Div([
+            #     dcc.Graph(
+            #         id='bar-graph',
+            #     )
+            # ], 
+            # className= 'twelve columns'
+            # )
+            html.Div([
+                dcc.Graph(
+                    id='donut-graph',
+                    # figure={
+                    #     'data': [
+                    #         go.Pie(
+                    #             values=type_counts,
+                    #             labels=type_counts_index,
+                    #             hole=0.3
+                    #         )
+                    #     ],
+                    #     'layout': go.Layout(
+                    #         title=go.layout.Title(text="Percentage of different WIFI type")
+                    #     )
+                    # }
+                )
+            ],className= 'twelve columns')
+        ], className='row')
     ], 
     className='ten columns offset-by-one')
 )
@@ -152,8 +179,8 @@ Callback functions
     [Input('regionControl', 'value'),
      Input('typeControl', 'value')])
 def map_selection(region, wifi_type):
-    print("selected region", region)
-    print("selected region", wifi_type)
+    # print("selected region", region)
+    # print("selected region", wifi_type)
     selected = map_data[map_data["BoroName"].isin(region)] # BoroName filter
     selected = selected[selected['Type'].isin(wifi_type)] # Type filter
 
@@ -191,9 +218,9 @@ def map_selection(region, wifi_type):
     Output('bar-graph', 'figure'),
     [Input('regionControl', 'value'),
      Input('typeControl', 'value')])
-def update_barchart(region, wifi_type):
-    print("selected region", region)
-    print("selected region", wifi_type)
+def update_bar_chart(region, wifi_type):
+    # print("selected region", region)
+    # print("selected region", wifi_type)
     selected = map_data[map_data["BoroName"].isin(region)] # BoroName filter
     selected = selected[selected['Type'].isin(wifi_type)] # Type filter
     
@@ -202,20 +229,47 @@ def update_barchart(region, wifi_type):
     Borough_counts_index = Borough_counts.index.tolist()
 
     figure = {
-    'data': [
-        go.Bar(
-            x=Borough_counts_index,
-            y=Borough_counts
+        'data': [
+            go.Bar(
+                x=Borough_counts_index,
+                y=Borough_counts
+            )
+        ],
+        'layout': go.Layout(
+            title=go.layout.Title(text="Number of Wifi hotspot by block"),
+            xaxis={'title': 'Block Name', 'automargin': True},
+            yaxis={'title': 'Wifi Hotspot Count', 'automargin': True},
+            hovermode='closest',
+            autosize=True
         )
-    ],
-    'layout': go.Layout(
-        title=go.layout.Title(text="Number of Wifi hotspot by block"),
-        xaxis={'title': 'Block Name', 'automargin': True},
-        yaxis={'title': 'Wifi Hotspot Count', 'automargin': True},
-        hovermode='closest',
-        autosize=True
-    )
-}
+    }
+    return figure
+
+# reactive donut chart
+@app.callback(
+    Output('donut-graph', 'figure'),
+    [Input('regionControl', 'value')])
+def update_donut_chart(region):
+    # print("selected region", region)
+    selected = map_data[map_data["BoroName"].isin(region)] # BoroName filter
+    
+    # count by block
+    type_counts = map_data["Type"].value_counts(sort=True)
+    type_counts_index = type_counts.index.tolist()
+
+    # update figure
+    figure = {
+        'data': [
+            go.Pie(
+                values=type_counts,
+                labels=type_counts_index,
+                hole=0.3
+            )
+        ],
+        'layout': go.Layout(
+            title=go.layout.Title(text="Percentage of different WIFI type")
+        )
+    }
 
     return figure
 
