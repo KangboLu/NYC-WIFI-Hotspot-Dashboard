@@ -22,9 +22,7 @@ map_data = pd.read_csv("nyc-wi-fi-hotspot-locations.csv")
 # Selecting only required columns
 map_data = map_data[["BoroName", "Type", "Provider", "Name", "SSID", "Location", "Location_T", "Latitude", "Longitude"]].drop_duplicates()
 
-# count by block
-block_counts = map_data["BoroName"].value_counts(sort=True)
-block_counts_index = block_counts.index.tolist()
+
 
 # layout for map
 layout_map = dict(
@@ -50,6 +48,9 @@ layout_map = dict(
     )
 )
 
+"""
+Vizualization layout
+"""
 # app layout
 app.layout = html.Div(
     html.Div([
@@ -141,43 +142,35 @@ app.layout = html.Div(
         ),
 
         html.Div([
+            # donut chart for selected city with free wifi available
             html.Div([
                 dcc.Graph(
                     id='block-donut-graph',
-                    figure={
-                        'data': [
-                            go.Pie(
-                                values=block_counts,
-                                labels=block_counts_index,
-                                hole=0.3
-                            )
-                        ],
-                        'layout': go.Layout(
-                            title=go.layout.Title(text="Percentage of blocks with free WIFI")
-                        )
-                    }
-                )
-            ],
-            className = 'six columns'
-            ),
-            html.Div([
-                dcc.Graph(
-                    id='donut-graph',
                     # figure={
                     #     'data': [
                     #         go.Pie(
-                    #             values=type_counts,
-                    #             labels=type_counts_index,
+                    #             values=block_counts,
+                    #             labels=block_counts_index,
                     #             hole=0.3
                     #         )
                     #     ],
                     #     'layout': go.Layout(
-                    #         title=go.layout.Title(text="Percentage of different WIFI type")
+                    #         title=go.layout.Title(text="Percentage of blocks with free WIFI")
                     #     )
                     # }
                 )
-            ],className= 'six columns')
-        ], className='row')
+            ],
+            className = 'six columns'
+            ),
+            # donut chart for wifi type by given selected region
+            html.Div([
+                dcc.Graph(
+                    id='wifi-type-donut-graph'
+                )
+            ],
+            className= 'six columns')
+        ], 
+        className='row')
     ], 
     className='ten columns offset-by-one')
 )
@@ -257,16 +250,44 @@ def update_bar_chart(region, wifi_type):
     }
     return figure
 
-# reactive donut chart
+# reactive donut chart for city with wifi
 @app.callback(
-    Output('donut-graph', 'figure'),
+    Output('block-donut-graph', 'figure'),
     [Input('regionControl', 'value')])
 def update_donut_chart(region):
     # print("selected region", region)
     selected = map_data[map_data["BoroName"].isin(region)] # BoroName filter
     
     # count by block
-    type_counts = map_data["Type"].value_counts(sort=True)
+    block_counts = selected["BoroName"].value_counts(sort=True)
+    block_counts_index = block_counts.index.tolist()
+
+    # update figure
+    figure = {
+        'data': [
+            go.Pie(
+                values=block_counts,
+                labels=block_counts_index,
+                hole=0.3
+            )
+        ],
+        'layout': go.Layout(
+            title=go.layout.Title(text="Percentage of blocks with free WIFI")
+        )
+    }
+
+    return figure
+
+# reactive donut chart for selected city's wifi type
+@app.callback(
+    Output('wifi-type-donut-graph', 'figure'),
+    [Input('regionControl', 'value')])
+def update_donut_chart(region):
+    # print("selected region", region)
+    selected = map_data[map_data["BoroName"].isin(region)] # BoroName filter
+    
+    # count by type
+    type_counts = selected["Type"].value_counts(sort=True)
     type_counts_index = type_counts.index.tolist()
 
     # update figure
