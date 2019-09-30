@@ -16,7 +16,7 @@ app = dash.Dash(__name__,
 app.title = 'NYC Wi-Fi Hotspots'
 
 # API keys and datasets
-mapbox_access_token = 'YOUR MAPBOX API TOKEN HERE'
+mapbox_access_token = 'YOUR ACCESS TOKEN HERE'
 map_data = pd.read_csv("nyc-wi-fi-hotspot-locations.csv")
 
 # Selecting only required columns
@@ -59,26 +59,6 @@ def create_stacked_y(provider_data):
 # create a matrix of provider data
 provider_data = [create_provider_data(provider) for provider in provider_names]
 provider_data = create_stacked_y(provider_data)
-data = [
-    go.Bar(
-        x=block_names, 
-        y=provider_data[i],
-        name=provider_names[i]
-    )
-    for i in range(len(provider_names))
-]
-
-layout = go.Layout(
-    barmode='stack',
-    title='WiFi Providers in each block',
-    legend=dict(font=dict(size=12)),
-    xaxis=dict(tickvals=block_names),
-    margin=dict(
-        l=20, r=30,  b=20, t=30
-    )
-)
-
-fig = go.Figure(data=data, layout=layout)
 
 # layout for map
 layout_map = dict(
@@ -224,9 +204,27 @@ app.layout = html.Div(
                 html.Div([
                     dcc.Graph(
                         id='stacked-graph',
-                        figure=go.Figure(data=data, layout=layout)
+                        figure=go.Figure(
+                            data = [
+                                go.Bar(
+                                    x=block_names, 
+                                    y=provider_data[i],
+                                    name=provider_names[i]
+                                )
+                                for i in range(len(provider_names))
+                            ],
+                            layout = go.Layout(
+                                barmode='stack',
+                                title='WiFi Providers in each block by percentage',
+                                legend=dict(font=dict(size=12)),
+                                xaxis=dict(tickvals=block_names),
+                                margin=dict(
+                                    l=20, r=30,  b=20, t=30
+                                )
+                            )
                         )
-                    ], className = "eleven columns"
+                    )
+                    ], className = "twelve columns"
                 )
             ], 
             className="row"
