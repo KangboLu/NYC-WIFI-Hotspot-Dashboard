@@ -16,7 +16,7 @@ app = dash.Dash(__name__,
 app.title = 'NYC Wi-Fi Hotspots'
 
 # API keys and datasets
-mapbox_access_token = 'YOUR MAPBOX ACCESS TOKEN HERE'
+mapbox_access_token = 'pk.eyJ1Ijoia2FuZ2JvbHUiLCJhIjoiY2p5ZTRhdHRvMHhqeDNpbzF5cm9kbjFhNyJ9.vydoqmQGx0UhJ7l23K_s0A'
 map_data = pd.read_csv("nyc-wi-fi-hotspot-locations.csv")
 
 # Selecting only required columns
@@ -49,16 +49,6 @@ layout_map = dict(
         zoom=9.5,
     )
 )
-
-# # Function to generate scattermap
-# def gen_map(map_data):
-#     # groupby returns a dictionary mapping the values of the first field
-#     # 'classification' onto a list of record dictionaries with that
-#     # classification value.
-#     return {
-#         "data": data,
-#         "layout": layout_map
-#     }
 
 # app layout
 app.layout = html.Div(
@@ -131,8 +121,8 @@ app.layout = html.Div(
         ),
 
         # Map + table + Histogram
-        html.Div(
-            [
+        html.Div([
+                # SCATTER MAP 
                 html.Div(
                     [
                         dcc.Graph(id='map-graph',
@@ -143,26 +133,10 @@ app.layout = html.Div(
                 html.Div([
                     dcc.Graph(
                         id='bar-graph',
-                        figure = {
-                            'data': [
-                                go.Bar(
-                                    x=Borough_counts_index,
-                                    y=Borough_counts
-                                )
-                            ],
-                            'layout': go.Layout(
-                                title=go.layout.Title(text="Number of Wifi hotspot by block"),
-                                xaxis={'title': 'Block Name', 'automargin': True},
-                                yaxis={'title': 'Wifi Hotspot Count', 'automargin': True},
-                                hovermode='closest',
-                                autosize=True
-                            )
-                        }
                     )
                 ], 
                 className= 'five columns'
-            )
-            ], 
+            )], 
             className="row"
         )
     ], 
@@ -210,6 +184,39 @@ def map_selection(region, wifi_type):
         "data": data_map,
         "layout": layout_map
     }
+    return figure
+
+# reactive bar chart
+@app.callback(
+    Output('bar-graph', 'figure'),
+    [Input('regionControl', 'value'),
+     Input('typeControl', 'value')])
+def update_barchart(region, wifi_type):
+    print("selected region", region)
+    print("selected region", wifi_type)
+    selected = map_data[map_data["BoroName"].isin(region)] # BoroName filter
+    selected = selected[selected['Type'].isin(wifi_type)] # Type filter
+    
+    # count by block
+    Borough_counts = selected["BoroName"].value_counts(sort=True)
+    Borough_counts_index = Borough_counts.index.tolist()
+
+    figure = {
+    'data': [
+        go.Bar(
+            x=Borough_counts_index,
+            y=Borough_counts
+        )
+    ],
+    'layout': go.Layout(
+        title=go.layout.Title(text="Number of Wifi hotspot by block"),
+        xaxis={'title': 'Block Name', 'automargin': True},
+        yaxis={'title': 'Wifi Hotspot Count', 'automargin': True},
+        hovermode='closest',
+        autosize=True
+    )
+}
+
     return figure
 
 if __name__ == '__main__':
