@@ -23,8 +23,8 @@ map_data = pd.read_csv("nyc-wi-fi-hotspot-locations.csv")
 map_data = map_data[["BoroName", "Type", "Provider", "Name", "SSID", "Location", "Location_T", "Latitude", "Longitude"]].drop_duplicates()
 
 # count by block
-type_counts = map_data["Type"].value_counts(sort=True)
-type_counts_index = type_counts.index.tolist()
+block_counts = map_data["BoroName"].value_counts(sort=True)
+block_counts_index = block_counts.index.tolist()
 
 # layout for map
 layout_map = dict(
@@ -141,13 +141,25 @@ app.layout = html.Div(
         ),
 
         html.Div([
-            # html.Div([
-            #     dcc.Graph(
-            #         id='bar-graph',
-            #     )
-            # ], 
-            # className= 'twelve columns'
-            # )
+            html.Div([
+                dcc.Graph(
+                    id='block-donut-graph',
+                    figure={
+                        'data': [
+                            go.Pie(
+                                values=block_counts,
+                                labels=block_counts_index,
+                                hole=0.3
+                            )
+                        ],
+                        'layout': go.Layout(
+                            title=go.layout.Title(text="Percentage of blocks with free WIFI")
+                        )
+                    }
+                )
+            ],
+            className = 'six columns'
+            ),
             html.Div([
                 dcc.Graph(
                     id='donut-graph',
@@ -164,7 +176,7 @@ app.layout = html.Div(
                     #     )
                     # }
                 )
-            ],className= 'twelve columns')
+            ],className= 'six columns')
         ], className='row')
     ], 
     className='ten columns offset-by-one')
