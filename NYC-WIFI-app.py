@@ -16,13 +16,69 @@ app = dash.Dash(__name__,
 app.title = 'NYC Wi-Fi Hotspots'
 
 # API keys and datasets
-mapbox_access_token = 'pk.eyJ1Ijoia2FuZ2JvbHUiLCJhIjoiY2p5ZTRhdHRvMHhqeDNpbzF5cm9kbjFhNyJ9.vydoqmQGx0UhJ7l23K_s0A'
+mapbox_access_token = 'YOUR MAPBOX API TOKEN HERE'
 map_data = pd.read_csv("nyc-wi-fi-hotspot-locations.csv")
 
 # Selecting only required columns
-map_data = map_data[["BoroName", "Type", "Provider", "Name", "SSID", "Location", "Location_T", "Latitude", "Longitude"]].drop_duplicates()
+map_data = map_data[["BoroName", "Type", "Provider", "Name", "SSID", 
+                     "Location", "Location_T", "Latitude", "Longitude"]].drop_duplicates()
 
+block_names = map_data["BoroName"].unique()
+provider_names = map_data["Provider"].unique()
 
+# create provider data based on specified provider
+def create_provider_data(provider):
+    provider_coverage = []
+    for block in block_names:
+        current_block = map_data[map_data.BoroName==block]
+        provider_coverage.append(len(current_block[current_block['Provider'] == provider]))
+    return provider_coverage
+
+# create stacked y based on total column sum
+def create_stacked_y(provider_data):
+    # combine all the rows
+    y = [create_provider_data(provider) for provider in provider_names]
+
+    # calculate column sum first for each column
+    rowsize, colsize = len(y), len(y[0])
+    colsum = []
+    # print(colsize)
+    for j in range(colsize):
+        tempsum = 0
+        for i in range(rowsize):
+            # print(i,j)
+            tempsum += y[i][j]
+        colsum.append(tempsum)
+    
+    # determine the height of each bar by percentage
+    for j in range(colsize):
+        for i in range(rowsize):
+            y[i][j] = 100 * round(y[i][j] / colsum[j], 3)
+    return y
+
+# create a matrix of provider data
+provider_data = [create_provider_data(provider) for provider in provider_names]
+provider_data = create_stacked_y(provider_data)
+data = [
+    go.Bar(
+        x=block_names, 
+        y=provider_data[i],
+        name=provider_names[i]
+    )
+    for i in range(len(provider_names))
+]
+
+layout = go.Layout(
+    barmode='stack',
+    title='WiFi Providers in each block',
+    legend=dict(font=dict(size=12)),
+    xaxis=dict(tickvals=block_names),
+    margin=dict(
+        l=20, r=30,  b=20, t=30
+    )
+)
+
+fig = go.Figure(data=data, layout=layout)
 
 # layout for map
 layout_map = dict(
@@ -115,13 +171,13 @@ app.layout = html.Div(
                         )
                     ],
                     className='six columns',
-                    style={'margin-top': '10'}
+                    style={'marginTop': '10'}
                 )
             ],
             className='row'
         ),
 
-        # Map + table + Histogram
+        # Map and bar chart
         html.Div([
                 # SCATTER MAP 
                 html.Div([
@@ -129,7 +185,7 @@ app.layout = html.Div(
                                   animate=False)
                     ], className = "seven columns"
                 ),
-
+                # bar chart
                 html.Div([
                     dcc.Graph(
                         id='bar-graph',
@@ -141,23 +197,12 @@ app.layout = html.Div(
             className="row"
         ),
 
+        # 2 donut charts
         html.Div([
             # donut chart for selected city with free wifi available
             html.Div([
                 dcc.Graph(
-                    id='block-donut-graph',
-                    # figure={
-                    #     'data': [
-                    #         go.Pie(
-                    #             values=block_counts,
-                    #             labels=block_counts_index,
-                    #             hole=0.3
-                    #         )
-                    #     ],
-                    #     'layout': go.Layout(
-                    #         title=go.layout.Title(text="Percentage of blocks with free WIFI")
-                    #     )
-                    # }
+                    id='block-donut-graph'
                 )
             ],
             className = 'six columns'
@@ -169,8 +214,23 @@ app.layout = html.Div(
                 )
             ],
             className= 'six columns')
-        ], 
-        className='row')
+            ], 
+            className='row'
+        ),
+
+        # Charts for providers
+        html.Div([
+                # stacked bar chart
+                html.Div([
+                    dcc.Graph(
+                        id='stacked-graph',
+                        figure=go.Figure(data=data, layout=layout)
+                        )
+                    ], className = "eleven columns"
+                )
+            ], 
+            className="row"
+        ),
     ], 
     className='ten columns offset-by-one')
 )
