@@ -16,7 +16,7 @@ app = dash.Dash(__name__,
 app.title = 'NYC Wi-Fi Hotspots'
 
 # API keys and datasets
-mapbox_access_token = 'YOUR MAPBOX API ACCESS TOKEN HERE'
+mapbox_access_token = 'YOUR MAPBOX ACCESS CODE'
 map_data = pd.read_csv("nyc-wi-fi-hotspot-locations.csv")
 
 # Selecting only required columns
@@ -68,9 +68,9 @@ provider_data = create_stacked_y(provider_data)
 layout_map = dict(
     autosize=True,
     font=dict(color="#191A1A"),
-    titlefont=dict(color="#191A1A", size='14'),
+    # titlefont=dict(color="#191A1A", size='14'),
     margin=dict(
-        l=20, r=20,  b=20, t=20
+        l=20, r=20,  b=20, t=30
     ),
     hovermode="closest",
     plot_bgcolor='#fffcfc',
@@ -138,7 +138,7 @@ app.layout = html.Div(
                                 labelStyle={'display': 'inline-block'}
                         ),
                     ],
-                    className='seven columns',
+                    className='seven columns checkmark',
                     style={'marginTop': '20'}
                 ),
                 #--------------------------
@@ -223,7 +223,7 @@ app.layout = html.Div(
                                 barmode='stack',
                                 title='WiFi Providers in each block by percentage with max=100%',
                                 legend=dict(font=dict(size=12)),
-                                xaxis=dict(tickvals=[0, 20, 40, 60, 80, 100]),
+                                xaxis=dict(title='percentage', tickvals=[0, 20, 40, 60, 80, 100]),
                                 margin=dict(
                                     l=20, r=30,  b=20, t=30
                                 ),
