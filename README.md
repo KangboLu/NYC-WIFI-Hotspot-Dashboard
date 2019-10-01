@@ -1,6 +1,9 @@
 # NYC-WIFI-Hotspot-Visualization
 A Visualization project to visualize NYC WIFI Hotspot Data
 
+## Deployde on Heroku:
+Click the link here: [Link to Dashboard](https://nyc-wifi-dashapp.herokuapp.com/)
+
 ### Tools used:
 Dash, Plotly, and Mapbox
 
