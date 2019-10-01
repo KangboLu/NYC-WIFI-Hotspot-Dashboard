@@ -1,2 +1,15 @@
 # NYC-WIFI-Hotspot-Visualization
-A Visualization project built to visualize NYC WIFI Hotspot Data
+A Visualization project to visualize NYC WIFI Hotspot Data
+
+### Tools used:
+Dash, Plotly, and Mapbox
+
+## Screenshots:
+### 1. Scatter Map and Bar chart
+![Map and Bar chart](./app_screenshot_1.PNG)
+
+### 2. Two Donut Charts
+![Two Donut Charts](./app_screenshot_2.PNG)
+
+### 3. Horizontal Percentage Stacked Bar Chart
+![Horizontal Percentage Stacked Bar Chart](./app_screenshot_3.PNG)
