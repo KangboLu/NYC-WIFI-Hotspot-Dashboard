@@ -16,7 +16,7 @@ app = dash.Dash(__name__,
 app.title = 'NYC Wi-Fi Hotspots'
 
 # API keys and datasets
-mapbox_access_token = 'YOUR ACCESS TOKEN HERE'
+mapbox_access_token = 'YOUR MAPBOX API ACCESS TOKEN HERE'
 map_data = pd.read_csv("nyc-wi-fi-hotspot-locations.csv")
 
 # Selecting only required columns
@@ -25,6 +25,10 @@ map_data = map_data[["BoroName", "Type", "Provider", "Name", "SSID",
 
 block_names = map_data["BoroName"].unique()
 provider_names = map_data["Provider"].unique()
+marker_colors=["#003f5c","#14456c", "#2b4a7a","#444e86",
+                                       "#5f508f","#7a5195","#955196","#af5093",
+                                       "#c84f8c","#dd5182","#ef5675","#fc6065",
+                                       "#ff6e54","#ff7f40","#ff9229","#ffa600"]
 
 # create provider data based on specified provider
 def create_provider_data(provider):
@@ -134,7 +138,7 @@ app.layout = html.Div(
                                 labelStyle={'display': 'inline-block'}
                         ),
                     ],
-                    className='six columns',
+                    className='seven columns',
                     style={'marginTop': '20'}
                 ),
                 #--------------------------
@@ -150,7 +154,7 @@ app.layout = html.Div(
                             value=list(set(map_data['Type']))
                         )
                     ],
-                    className='six columns',
+                    className='five columns',
                     style={'marginTop': '10'}
                 )
             ],
@@ -207,20 +211,23 @@ app.layout = html.Div(
                         figure=go.Figure(
                             data = [
                                 go.Bar(
-                                    x=block_names, 
-                                    y=provider_data[i],
-                                    name=provider_names[i]
+                                    y=block_names, 
+                                    x=provider_data[i],
+                                    name=provider_names[i],
+                                    marker_color=marker_colors[i],
+                                    orientation='h'
                                 )
                                 for i in range(len(provider_names))
                             ],
                             layout = go.Layout(
                                 barmode='stack',
-                                title='WiFi Providers in each block by percentage',
+                                title='WiFi Providers in each block by percentage with max=100%',
                                 legend=dict(font=dict(size=12)),
-                                xaxis=dict(tickvals=block_names),
+                                xaxis=dict(tickvals=[0, 20, 40, 60, 80, 100]),
                                 margin=dict(
                                     l=20, r=30,  b=20, t=30
-                                )
+                                ),
+                                
                             )
                         )
                     )
@@ -249,9 +256,9 @@ def map_selection(region, wifi_type):
 
     # function to set wifi hotspot color on the map based on the type
     def set_color(wifi_type):
-        if wifi_type == 'Free': return 'green'
-        elif wifi_type == 'Limited Free': return 'blue'
-        else: return 'orange'
+        if wifi_type == 'Free': return '#2ca02c'
+        elif wifi_type == 'Limited Free': return '#1f77b4'
+        else: return '#d62728'
 
     # map data attribute
     data_map = [{
