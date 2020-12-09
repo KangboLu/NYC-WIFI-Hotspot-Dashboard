@@ -10,9 +10,8 @@ from plotly.graph_objs import *
 from dash.dependencies import Input, Output, State
 
 # launch app with external css
-external_stylesheets = ['https://codepen.io/kangbolu/pen/WNeWGyK.css']
-app = dash.Dash(__name__,
-                external_stylesheets=external_stylesheets)
+# external_stylesheets = ['https://codepen.io/kangbolu/pen/WNeWGyK.css']
+app = dash.Dash(__name__)
 app.title = 'NYC Wi-Fi Hotspots'
 
 # API keys and datasets
@@ -29,7 +28,7 @@ marker_colors=["#003f5c","#14456c", "#2b4a7a","#444e86",
                                        "#5f508f","#7a5195","#955196","#af5093",
                                        "#c84f8c","#dd5182","#ef5675","#fc6065",
                                        "#ff6e54","#ff7f40","#ff9229","#ffa600"]
-
+                                       
 # create provider data based on specified provider
 def create_provider_data(provider):
     provider_coverage = []
